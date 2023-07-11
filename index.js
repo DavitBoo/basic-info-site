@@ -1,7 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const url = require("url");
-const path = require("path");
+// const path = require("path");
 
 http
   .createServer((req, res) => {
@@ -11,21 +11,31 @@ http
     }
 
     const parsedUrl = url.parse(req.url, true);
-    const path = parsedUrl.href;
+    const pathname = parsedUrl.pathname;
 
-    let htmlFile;
+    let contentType = "text/html";
+    let filePath = "";
 
-    if (path === "/about" || path === "/contact-me") {
-      htmlFile = fs.readFileSync(`.${path}.html`);
-      res.writeHead(200, { "Content-Type": "text/html" });
-    } else if (path === "/") {
-      htmlFile = fs.readFileSync(`./index.html`);
-      res.writeHead(200, { "Content-Type": "text/html" });
+    if (pathname === "/") {
+      filePath = "./index.html";
+    } else if (pathname === "/about" || pathname === "/contact-me") {
+      filePath = `.${pathname}.html`;
+    } else if (pathname === "/style.css") {
+      filePath = "./style.css";
+      contentType = "text/css";
     } else {
-      htmlFile = fs.readFileSync(`./404.html`);
+      filePath = "./404.html";
       res.writeHead(404, { "Content-Type": "text/html" });
     }
 
-    res.end(htmlFile);
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        res.writeHead(500, { "Content-Type": "text/html" });
+        res.end("Error interno del servidor");
+      } else {
+        res.writeHead(200, { "Content-Type": contentType });
+        res.end(content);
+      }
+    });
   })
   .listen(8080);
